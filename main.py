@@ -27,7 +27,8 @@ def draw_player(x, y):
     glEnd()
 
 def player_movement():
-    global width, height, player_x, player_y
+    global player_x, player_y
+    width, height = glfw.get_framebuffer_size(window)
 
     if glfw.get_key(window, glfw.KEY_W) == glfw.PRESS:
         player_y += player_speed 
