@@ -1,13 +1,15 @@
 import glfw
 from OpenGL.GL import *
 
-glfw.init()
-window = glfw.create_window(640, 480, "Raycasting Engine", None, None)
-glfw.make_context_current(window)    
-
+width = 640
+height = 480
 player_x = 320
 player_y = 240
-player_speed = 5
+player_speed = 1
+
+glfw.init()
+window = glfw.create_window(width, height, "Raycasting Engine", None, None)
+glfw.make_context_current(window)    
 
 def setup_projection():
     width, height = glfw.get_framebuffer_size(window)
@@ -25,7 +27,7 @@ def draw_player(x, y):
     glEnd()
 
 def player_movement():
-    global player_x, player_y
+    global width, height, player_x, player_y
 
     if glfw.get_key(window, glfw.KEY_W) == glfw.PRESS:
         player_y += player_speed 
@@ -35,6 +37,15 @@ def player_movement():
         player_x -= player_speed
     if glfw.get_key(window, glfw.KEY_D) == glfw.PRESS:
         player_x += player_speed
+
+    if player_x < 0: 
+        player_x = 0
+    if player_x > width:
+        player_x = width
+    if player_y < 0: 
+        player_y = 0
+    if player_y > height:
+        player_y = height
     
 
 while not glfw.window_should_close(window):
