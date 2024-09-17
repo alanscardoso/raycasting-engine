@@ -8,6 +8,7 @@ player_y = 256
 player_speed = 2
 
 glfw.init()
+glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
 window = glfw.create_window(width, height, "Raycasting Engine", None, None)
 glfw.make_context_current(window)    
 
