@@ -1,16 +1,57 @@
 import glfw
 from OpenGL.GL import *
 
-width = 640
-height = 480
-player_x = 320
-player_y = 240
-player_speed = 1
+width = 512
+height = 512
+player_x = 256
+player_y = 256
+player_speed = 2
 
 glfw.init()
 window = glfw.create_window(width, height, "Raycasting Engine", None, None)
 glfw.make_context_current(window)    
 
+
+def draw_2d_map():
+    square_size = 64
+    x, y = 0, square_size*7
+
+    map2d = [
+        1,1,1,1,1,1,1,1,
+        1,0,0,0,0,0,0,1,
+        1,0,1,0,0,0,0,1,
+        1,0,1,1,0,1,0,1,
+        1,0,1,0,1,1,0,1,
+        1,0,0,0,0,1,0,1,
+        1,0,0,0,0,0,0,1,
+        1,1,1,1,1,1,1,1,
+    ]
+
+    count = 0
+    for i in map2d:
+        if i == 0: 
+            glColor3f(0,0,0)
+        if i == 1:
+            glColor3f(1,1,1)
+
+        # the vertices must be draw in clockwise order
+        glBegin(GL_QUADS)
+        glVertex2i(x + 1, y + 1)
+        glVertex2i(x + square_size - 1, y + 1)
+        glVertex2i(x + square_size - 1, y + square_size - 1)
+        glVertex2i(x + 1, y + square_size - 1)
+        glEnd()
+
+        x += square_size
+        count += 1
+
+        if count == 8:
+            count = 0
+            y -= square_size
+            x = 0
+
+
+# change the center relative to a pixel base system to draw stuff
 def setup_projection():
     width, height = glfw.get_framebuffer_size(window)
     glViewport(0, 0, width, height)
@@ -52,8 +93,10 @@ def player_movement():
 while not glfw.window_should_close(window):
     setup_projection()
 
-    glClearColor(0.0, 0.0, 0.0, 1)
+    glClearColor(0.5, 0.5, 0.5, 1)
     glClear(GL_COLOR_BUFFER_BIT)
+
+    draw_2d_map()
 
     player_movement()  
     draw_player(player_x, player_y)
