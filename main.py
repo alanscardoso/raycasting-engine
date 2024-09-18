@@ -3,9 +3,8 @@ from OpenGL.GL import *
 
 width = 512
 height = 512
-# TODO we must ensure that the player will start in a space and not on a wall
-player_x = 256
-player_y = 256
+player_x = 0
+player_y = 0
 player_speed = 2
 
 glfw.init()
@@ -19,7 +18,7 @@ square_size = 64
 map_side = 8 # in squares, all maps are squareXsquare size
 map_2d = [
     1,1,1,1,1,1,1,1,
-    1,0,0,0,0,0,1,1,
+    1,0,0,0,0,0,0,1,
     1,0,1,1,0,0,0,1,
     1,0,1,0,0,1,0,1,
     1,0,1,0,0,1,0,1,
@@ -27,6 +26,31 @@ map_2d = [
     1,1,0,0,0,0,0,1,
     1,1,1,1,1,1,1,1,
 ]
+
+# here we ensure player will never start in a wall
+# player will start in center of the firt top-left square free
+def set_player_start_point():
+    global map_2d, square_size, map_side, player_x, player_y
+
+    x, y = 0, square_size*7
+
+    count = 0
+    for i in map_2d:
+        if i == 0:
+            player_x = x + int(square_size/2)
+            player_y = y + int(square_size/2)
+
+            return True
+        
+        x += square_size
+        count += 1
+
+        if count == map_side:
+            count = 0
+            y -= square_size
+            x = 0
+
+    return False
 
 def is_wall_collision():
     global map_2d, square_size, map_side, player_x, player_y
@@ -133,7 +157,8 @@ def player_movement():
         player_y = 0
     if player_y > height:
         player_y = height
-    
+
+set_player_start_point() 
 
 while not glfw.window_should_close(window):
     setup_projection()
