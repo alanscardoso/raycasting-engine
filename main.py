@@ -9,6 +9,8 @@ player_y = 0
 player_speed = 2
 player_rotation = 0
 rotation_speed = 2
+square_size = 64
+map_side = 8
 
 glfw.init()
 glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
