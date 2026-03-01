@@ -7,10 +7,16 @@ height = 512
 player_x = 0
 player_y = 0
 player_speed = 2
-player_rotation = 0
+player_rotation = 0 # degrees
 rotation_speed = 2
 square_size = 64
 map_side = 8
+
+# raycasting parameters
+fov = 60
+num_rays = width # one ray per vertical column
+max_depth = square_size * map_side # max distance a ray can travel
+step_size = 1 # how much distance we advance each ray check
 
 glfw.init()
 glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
@@ -177,6 +183,61 @@ def player_movement():
 
     player_rotation %= 360
 
+def cast_rays_and_draw_3d():
+    global player_x, player_y, player_rotation, fov, num_rays, max_depth, step_size
+
+    # we'll draw from x = 0 to x = width-1
+    start_angle = player_rotation - (fov / 2)
+    angle_step = fov / num_rays
+
+    for ray in range(num_rays):
+        current_angle_deg = start_angle + ray * angle_step
+        current_angle_rad = math.radians(current_angle_deg)
+
+        # step forward until hit wall or max depth
+        distance = 0
+        hit_wall = False
+
+        while distance < max_depth:
+            test_x = player_x + math.cos(current_angle_rad) * distance
+            test_y = player_y + math.sin(current_angle_rad) * distance
+
+            if is_wall_collision(test_x, test_y):
+                hit_wall = True
+                break
+
+            distance += step_size
+
+        if not hit_wall:
+            continue
+
+        # fix fish-eye: project the distance to player's view direction
+        delta_angle = math.radians(current_angle_deg - player_rotation)
+        distance_corrected = distance * math.cos(delta_angle)
+
+        if distance_corrected == 0:
+            distance_corrected = 0.0001
+
+        wall_height = (square_size * height) / distance_corrected
+
+        # center the wall vertically
+        wall_top = (height / 2) - (wall_height / 2)
+        wall_bottom = wall_top + wall_height
+
+        if wall_top < 0:
+            wall_top = 0
+        if wall_bottom > height:
+            wall_bottom = height
+
+        # shading: farther walls darker
+        shade = 1.0 - min(distance_corrected / max_depth, 1.0)
+        glColor3f(shade, shade, shade)
+
+        # draw vertical line for this ray
+        glBegin(GL_LINES)
+        glVertex2i(ray, int(wall_top))
+        glVertex2i(ray, int(wall_bottom))
+        glEnd()
 
 set_player_start_point() 
 
@@ -186,10 +247,10 @@ while not glfw.window_should_close(window):
     glClearColor(0.5, 0.5, 0.5, 1)
     glClear(GL_COLOR_BUFFER_BIT)
 
-    draw_2d_map()
-
-    player_movement()  
-    draw_player()
+    cast_rays_and_draw_3d()
+    player_movement()
+    #draw_2d_map()
+    #draw_player()
 
     glfw.swap_buffers(window)
     glfw.poll_events()
