@@ -14,9 +14,10 @@ map_side = 8
 
 # raycasting parameters
 fov = 60
-num_rays = width # one ray per vertical column
+num_rays = width // 2 # we can cast one ray every 2 pixels to get a good resolution without too much performance cost
+ray_col_width = 2
 max_depth = square_size * map_side # max distance a ray can travel
-step_size = 1 # how much distance we advance each ray check
+step_size = 4 # how much distance we advance each ray check
 
 glfw.init()
 glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
@@ -89,7 +90,9 @@ def is_wall_collision(player_x, player_y):
 # TODO must be a best way of drawing the map
 def draw_2d_map():
     global map_2d, square_size, map_side
-    x, y = 0, square_size*7
+
+    scale = 0.3
+    x, y = 0, (square_size*7) * scale
 
     count = 0
     for i in map_2d:
@@ -98,20 +101,24 @@ def draw_2d_map():
         if i == 1:
             glColor3f(1,1,1)
 
+        sx = x
+        sy = y
+        ss = square_size * scale
+
         # the vertices must be draw in clockwise order
         glBegin(GL_QUADS)
-        glVertex2i(x + 1, y + 1)
-        glVertex2i(x + square_size - 1, y + 1)
-        glVertex2i(x + square_size - 1, y + square_size - 1)
-        glVertex2i(x + 1, y + square_size - 1)
+        glVertex2f(sx + 1, sy + 1)
+        glVertex2f(sx + ss - 1, sy + 1)
+        glVertex2f(sx + ss - 1, sy + ss - 1)
+        glVertex2f(sx + 1, sy + ss - 1)
         glEnd()
 
-        x += square_size
+        x += square_size * scale
         count += 1
 
         if count == map_side:
             count = 0
-            y -= square_size
+            y -= square_size * scale
             x = 0
 
 # change the center relative to a pixel base system to draw stuff
@@ -125,25 +132,29 @@ def setup_projection():
     glMatrixMode(GL_MODELVIEW)
 
 def draw_player():
-    global player_x, player_y, player_rotation
+    global player_x, player_y, player_rotation, square_size
+    scale = 0.3
+
+    px = player_x * scale
+    py = player_y * scale
 
     glPointSize(8)
     glColor3f(1, 1, 0)
     glBegin(GL_POINTS)
-    glVertex2i(int(player_x), int(player_y))
+    glVertex2i(int(px), int(py))
     glEnd()
 
     radian_angle = math.radians(player_rotation)
-    line_length = 30
+    line_length = 30 * scale
 
-    line_end_x = player_x + line_length * math.cos(radian_angle)
-    line_end_y = player_y + line_length * math.sin(radian_angle)
+    line_end_x = px + line_length * math.cos(radian_angle)
+    line_end_y = py + line_length * math.sin(radian_angle)
 
     glLineWidth(2)
     glColor3f(1, 0, 0)
     glBegin(GL_LINES)
-    glVertex2i(int(player_x), int(player_y))
-    glVertex2i(int(line_end_x), int(line_end_y))
+    glVertex2f(px, py)
+    glVertex2f(line_end_x, line_end_y)
     glEnd()
 
 def player_movement():
@@ -186,7 +197,6 @@ def player_movement():
 def cast_rays_and_draw_3d():
     global player_x, player_y, player_rotation, fov, num_rays, max_depth, step_size
 
-    # we'll draw from x = 0 to x = width-1
     start_angle = player_rotation - (fov / 2)
     angle_step = fov / num_rays
 
@@ -234,9 +244,13 @@ def cast_rays_and_draw_3d():
         glColor3f(shade, shade, shade)
 
         # draw vertical line for this ray
+        screen_x = ray * ray_col_width
         glBegin(GL_LINES)
-        glVertex2i(ray, int(wall_top))
-        glVertex2i(ray, int(wall_bottom))
+        glVertex2f(screen_x, int(wall_top))
+        glVertex2f(screen_x, int(wall_bottom))
+        glVertex2f(screen_x + ray_col_width, int(wall_top))
+        glVertex2f(screen_x + ray_col_width, int(wall_bottom))
+        glVertex2f(screen_x, int(wall_bottom))
         glEnd()
 
 set_player_start_point() 
@@ -249,8 +263,8 @@ while not glfw.window_should_close(window):
 
     cast_rays_and_draw_3d()
     player_movement()
-    #draw_2d_map()
-    #draw_player()
+    draw_2d_map()
+    draw_player()
 
     glfw.swap_buffers(window)
     glfw.poll_events()
