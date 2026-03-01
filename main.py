@@ -178,10 +178,10 @@ def player_movement():
             player_y = new_y
 
     if glfw.get_key(window, glfw.KEY_A) == glfw.PRESS:
-        player_rotation += rotation_speed
+        player_rotation -= rotation_speed
 
     if glfw.get_key(window, glfw.KEY_D) == glfw.PRESS:
-        player_rotation -= rotation_speed
+        player_rotation += rotation_speed
 
     if player_x < 0:
         player_x = 0
